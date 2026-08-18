@@ -1,0 +1,59 @@
+{
+  "name": "rusty.js",
+  "version": "0.1.0",
+  "description": "Rust-style ownership/borrow checking for JavaScript. ref/mut/move/clone primitives plus a static analyzer, as one package.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cheonghakim/rusty.js.git"
+  },
+  "homepage": "https://github.com/cheonghakim/rusty.js#readme",
+  "bugs": {
+    "url": "https://github.com/cheonghakim/rusty.js/issues"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js"
+    },
+    "./eslint": {
+      "import": "./dist/eslint/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "rusty": "./dist/cli/bin.js"
+  },
+  "sideEffects": false,
+  "files": ["dist"],
+  "engines": {
+    "node": ">=18"
+  },
+  "peerDependencies": {
+    "eslint": ">=9"
+  },
+  "peerDependenciesMeta": {
+    "eslint": { "optional": true }
+  },
+  "scripts": {
+    "build:runtime": "tsc -p tsconfig.build.json",
+    "build:eslint": "esbuild src/eslint/index.ts --bundle --platform=node --format=esm --external:eslint --outfile=dist/eslint/index.js",
+    "build:cli": "esbuild src/cli/bin.ts --bundle --platform=node --format=esm --outfile=dist/cli/bin.js",
+    "build": "npm run build:runtime && npm run build:eslint && npm run build:cli",
+    "test": "vitest run",
+    "lint": "tsc --noEmit",
+    "pretest": "npm run lint",
+    "prebuild": "npm run lint"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "esbuild": "^0.23.1",
+    "eslint": "^9.9.0",
+    "eslint-scope": "^8.1.0",
+    "eslint-visitor-keys": "^4.1.0",
+    "espree": "^10.1.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.9"
+  }
+}
