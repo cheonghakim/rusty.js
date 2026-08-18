@@ -2,9 +2,13 @@
 
 [English](./README.md) | **한국어**
 
-[![npm](https://img.shields.io/npm/v/rusty.js)](https://www.npmjs.com/package/rusty.js)
+[![npm](https://img.shields.io/npm/v/%40cheonghakim%2Frusty.js)](https://www.npmjs.com/package/@cheonghakim/rusty.js)
 
 > Write JavaScript. Think in ownership.
+
+npm에는 `@cheonghakim/rusty.js`로 올라갑니다 — scope 없는 `rusty.js`는 npm의 유사 이름 방지 정책에
+걸려서(기존의 무관한 `rustyjs` 패키지와 너무 비슷하다는 이유) 작성자의 npm 사용자명으로 scope를
+붙였습니다. `rusty` CLI 명령어 자체는 이름과 무관하게 그대로입니다.
 
 Rusty는 Rust의 ownership/borrow 검사를 JavaScript 문법이나 자료구조를 바꾸지 않고 그대로 가져옵니다.
 객체, 배열, class, Promise를 지금 쓰던 그대로 씁니다. 여기에 `ref / mut / move / clone` 네 가지
@@ -12,8 +16,8 @@ Rusty는 Rust의 ownership/borrow 검사를 JavaScript 문법이나 자료구조
 지금 누가 소유하고 있는지를 정적으로 추적합니다.
 
 TypeScript는 값의 모양을 검사합니다. Rusty는 그 값을 누가, 언제 건드려도 되는지를 검사합니다.
-실무에서 나는 JS/TS 버그 중 상당수는 타입 불일치가 아닙니다. 어딘가에서 객체 참조를 들고 있는데,
-다른 코드가 그 값을 바꿔버리는 경우죠. 구조적 타이핑은 이런 문제를 볼 방법이 없습니다. Rusty가
+실무에서 발생하는 JS/TS 버그 중 상당수는 타입 불일치가 아닙니다. 어딘가에서 객체 참조를 들고 있는데,
+다른 코드가 그 값을 바꾸는 경우입니다. 구조적 타이핑은 이런 문제를 볼 방법이 없습니다. Rusty가
 겨냥하는 지점이 바로 여기입니다.
 
 ```js
@@ -63,21 +67,22 @@ update(mut(user)); // 정상, r의 borrow는 이미 끝남
 전부 npm 패키지 하나에 subpath export로 담겨 있어서, 버전도 설치도 하나만 신경 쓰면 됩니다 — 실제로
 필요한 진입점만 가져다 쓰면 됩니다.
 
-| 진입점                     | 용도                                                                                       |
-| --------------------------- | -------------------------------------------------------------------------------------------- |
-| `rusty.js`                  | `ref`, `mut`, `move`, `clone`. 실제 배포되는 앱 코드에 들어가는 유일한 import. 의존성 없음.  |
-| `rusty.js/eslint`           | ESLint flat config용 진단 플러그인. 분석 엔진까지 하나로 번들링돼 있음.                      |
-| `rusty` (`rusty.js`의 bin) | `rusty check`. CI나 일회성 검사용. 에러를 찾으면 non-zero exit.                             |
+| 진입점                              | 용도                                                                                       |
+| ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `@cheonghakim/rusty.js`              | `ref`, `mut`, `move`, `clone`. 실제 배포되는 앱 코드에 들어가는 유일한 import. 의존성 없음.  |
+| `@cheonghakim/rusty.js/eslint`       | ESLint flat config용 진단 플러그인. 분석 엔진까지 하나로 번들링돼 있음.                      |
+| `rusty` (패키지의 bin)               | `rusty check`. CI나 일회성 검사용. 에러를 찾으면 non-zero exit.                             |
 
 패키지 레벨에 `sideEffects: false`가 설정돼 있어서, 번들러는 실제로 import한 진입점만 가져갑니다 —
-`rusty.js`만 import하면 ESLint 플러그인이나 그 안에 번들링된 분석 엔진은 전혀 딸려오지 않습니다.
+`@cheonghakim/rusty.js`만 import하면 ESLint 플러그인이나 그 안에 번들링된 분석 엔진은 전혀 딸려오지
+않습니다.
 
 ## 빠른 시작
 
 ### 설치
 
 ```bash
-npm install rusty.js
+npm install @cheonghakim/rusty.js
 ```
 
 패키지 매니저는 상관없습니다 — `pnpm add`, `yarn add`, `bun add`도 명령어만 바꾸면 동일하게 동작합니다.
@@ -86,7 +91,7 @@ npm install rusty.js
 
 ```js
 // eslint.config.js
-import rusty from "rusty.js/eslint";
+import rusty from "@cheonghakim/rusty.js/eslint";
 
 export default [rusty.configs.recommended];
 ```
@@ -96,7 +101,7 @@ npx rusty check         # 또는 설치돼 있다면: rusty check
 ```
 
 ```js
-import { ref, mut, move } from "rusty.js";
+import { ref, mut, move } from "@cheonghakim/rusty.js";
 
 render(ref(state));
 update(mut(state));

@@ -2,9 +2,13 @@
 
 **English** | [한국어](./README.ko.md)
 
-[![npm](https://img.shields.io/npm/v/rusty.js)](https://www.npmjs.com/package/rusty.js)
+[![npm](https://img.shields.io/npm/v/%40cheonghakim%2Frusty.js)](https://www.npmjs.com/package/@cheonghakim/rusty.js)
 
 > Write JavaScript. Think in ownership.
+
+Published as `@cheonghakim/rusty.js` — npm's name-similarity check blocked the unscoped `rusty.js`
+as too close to an existing unrelated package, so it's scoped under the author's npm username
+instead. The `rusty` CLI command name is unaffected either way.
 
 Rusty brings Rust's ownership/borrow checking to plain JavaScript, without replacing its syntax
 or data structures. You keep using objects, arrays, classes, and Promises as-is. Rusty adds four
@@ -63,22 +67,22 @@ calls with no declared contract, dynamic property access, `Proxy`/`eval` — is 
 Everything ships as a single npm package with subpath exports, so there's one version number and
 one install to think about — pull in only the entry point you actually need.
 
-| Entry point           | What it's for                                                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `rusty.js`             | `ref`, `mut`, `move`, `clone` — the only import that ends up in your shipped app code. No dependencies. |
-| `rusty.js/eslint`      | An ESLint flat-config plugin for editor/CI diagnostics. Self-contained bundle; the analyzer is compiled in.  |
-| `rusty` (the `rusty.js` bin) | `rusty check` for CI or one-off scans. Exits non-zero when it finds an error.                              |
+| Entry point                          | What it's for                                                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `@cheonghakim/rusty.js`               | `ref`, `mut`, `move`, `clone` — the only import that ends up in your shipped app code. No dependencies. |
+| `@cheonghakim/rusty.js/eslint`        | An ESLint flat-config plugin for editor/CI diagnostics. Self-contained bundle; the analyzer is compiled in.  |
+| `rusty` (the package's bin)           | `rusty check` for CI or one-off scans. Exits non-zero when it finds an error.                              |
 
 `sideEffects: false` is set at the package level, so bundlers only pull in whichever entry point
-you actually import — importing `rusty.js` alone never drags in the ESLint plugin or its bundled
-analyzer.
+you actually import — importing `@cheonghakim/rusty.js` alone never drags in the ESLint plugin or
+its bundled analyzer.
 
 ## Quick start
 
 ### Install
 
 ```bash
-npm install rusty.js
+npm install @cheonghakim/rusty.js
 ```
 
 Package manager doesn't matter — `pnpm add`, `yarn add`, `bun add` work the same way, just
@@ -88,7 +92,7 @@ substitute the command.
 
 ```js
 // eslint.config.js
-import rusty from "rusty.js/eslint";
+import rusty from "@cheonghakim/rusty.js/eslint";
 
 export default [rusty.configs.recommended];
 ```
@@ -98,7 +102,7 @@ npx rusty check         # or, once installed: rusty check
 ```
 
 ```js
-import { ref, mut, move } from "rusty.js";
+import { ref, mut, move } from "@cheonghakim/rusty.js";
 
 render(ref(state));
 update(mut(state));
