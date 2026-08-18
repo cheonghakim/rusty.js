@@ -35,7 +35,9 @@ function formatDiagnostic(displayPath: string, d: Diagnostic): string {
   const loc = `${displayPath}:${d.primarySpan.line}:${d.primarySpan.column + 1}`;
   const lines = [`${loc}  ${d.severity}  ${d.code}`, `  ${d.message}`];
   for (const r of d.relatedSpans) {
-    lines.push(`    ↳ ${r.label} (${displayPath}:${r.span.line}:${r.span.column + 1})`);
+    lines.push(
+      `    ↳ ${r.label} (${displayPath}:${r.span.line}:${r.span.column + 1})`,
+    );
   }
   for (const f of d.fixes) {
     lines.push(`    fix: ${f.title}`);
@@ -58,13 +60,23 @@ export function runCheck(paths: string[]): CheckResult {
 
   for (const file of files) {
     const displayPath = relative(process.cwd(), file) || file;
-    const text = readFileSync(file, "utf8");
+    let text: string;
+    try {
+      text = readFileSync(file, "utf8");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      blocks.push(`${displayPath}\n  read error: ${message}`);
+      errorCount++;
+      continue;
+    }
 
     let diagnostics: Diagnostic[];
     try {
       ({ diagnostics } = analyze(text, file));
     } catch (err) {
-      blocks.push(`${displayPath}\n  parse error: ${(err as Error).message}`);
+      const message = err instanceof Error ? err.message : String(err);
+      blocks.push(`${displayPath}\n  parse error: ${message}`);
+      errorCount++;
       continue;
     }
 

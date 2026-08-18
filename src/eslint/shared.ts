@@ -14,13 +14,24 @@ export function getDiagnostics(context: RuleContext): Diagnostic[] {
 
   const text = sourceCode.getText();
   const filename = context.filename ?? context.getFilename();
-  const { diagnostics } = analyze(text, filename);
+  let diagnostics: Diagnostic[] = [];
+  try {
+    ({ diagnostics } = analyze(text, filename));
+  } catch {
+    // Our internal parser only understands plain ES2022 — TSX, decorators, and other syntax
+    // it can't handle are routine, not exceptional, so this stays silent rather than logging
+    // on every non-plain-JS file in the project (see design doc: unknown -> stay silent).
+  }
   cache.set(sourceCode, diagnostics);
   return diagnostics;
 }
 
 export function formatMessage(d: Diagnostic): string {
-  const related = d.relatedSpans.map((r) => ` (${r.label} @ ${r.span.line}:${r.span.column + 1})`).join("");
-  const fixes = d.fixes.length ? " — " + d.fixes.map((f) => f.title).join(" / ") : "";
+  const related = d.relatedSpans
+    .map((r) => ` (${r.label} @ ${r.span.line}:${r.span.column + 1})`)
+    .join("");
+  const fixes = d.fixes.length
+    ? " — " + d.fixes.map((f) => f.title).join(" / ")
+    : "";
   return `${d.message}${related}${fixes}`;
 }

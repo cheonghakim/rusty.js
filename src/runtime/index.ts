@@ -75,7 +75,7 @@ export function clone<T>(value: T): T {
   try {
     return JSON.parse(JSON.stringify(value));
   } catch (error) {
-    if (error instanceof TypeError && error.message.includes("circular")) {
+    if (error instanceof TypeError && /circular|cyclic/i.test(error.message)) {
       throw new TypeError(
         "[rusty] clone() failed: circular reference detected. " +
           "Either use structuredClone() directly, use a specialized cloning library, " +

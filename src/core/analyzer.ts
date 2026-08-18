@@ -363,6 +363,13 @@ function checkWriteConflict(ownerId: OwnerId, node: AnyNode, state: StateMap, ct
   }
   if (current.kind === "BorrowedRead") {
     report(ctx, "rusty/mutation-through-ref", node, current, subjectNode);
+    return;
+  }
+  if (current.kind === "BorrowedWrite") {
+    // A mutable borrow already holds exclusive access — writing through the original binding
+    // (or any other alias) while it's active is the same conflict as a second mut(), just
+    // reached via direct field access instead of another wrapper call.
+    report(ctx, "rusty/double-mut-borrow", node, current, subjectNode);
   }
 }
 

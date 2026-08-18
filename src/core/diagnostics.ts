@@ -119,10 +119,11 @@ export function report(
     }
     case "rusty/mutation-through-ref": {
       const span = lastBorrowSpan(relatedState);
+      const particleEul = koreanParticle(name, "object");
       if (span)
         relatedSpans.push({
           span,
-          label: `\`${name}\`을(를) ref()로 빌린 지점`,
+          label: `\`${name}\`${particleEul} ref()로 빌린 지점`,
         });
       const particleEun = koreanParticle(name, "topic");
       message = `\`${name}\`${particleEun} 현재 읽기 전용으로 빌려진 상태라 수정할 수 없습니다.`;

@@ -28,6 +28,7 @@ const invalidExpectations: Record<string, string> = {
   "move_while_borrowed.js": "rusty/move-while-borrowed",
   "mutation_through_ref.js": "rusty/mutation-through-ref",
   "mutation_through_ref_nested.js": "rusty/mutation-through-ref",
+  "write_while_mut.js": "rusty/double-mut-borrow",
 };
 
 describe("invalid fixtures produce exactly the expected error diagnostic", () => {
