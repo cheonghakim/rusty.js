@@ -1,6 +1,6 @@
 {
   "name": "@cheonghakim/rusty.js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rust-style ownership/borrow checking for JavaScript. ref/mut/move/clone primitives plus a static analyzer, as one package.",
   "license": "MIT",
   "type": "module",
@@ -29,7 +29,9 @@
     "rusty": "./dist/cli/bin.js"
   },
   "sideEffects": false,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=18"
   },
@@ -37,7 +39,9 @@
     "eslint": ">=9"
   },
   "peerDependenciesMeta": {
-    "eslint": { "optional": true }
+    "eslint": {
+      "optional": true
+    }
   },
   "scripts": {
     "build:runtime": "tsc -p tsconfig.build.json",
