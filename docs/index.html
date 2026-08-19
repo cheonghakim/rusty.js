@@ -4,26 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rusty Playground</title>
-<meta name="description" content="Rusty가 잡아내는 소유권 버그 3가지를 한 줄씩 실행하며 눈으로 확인하는 인터랙티브 데모.">
+<meta name="description" content="Rusty가 잡아내는 소유권 버그를 한 줄씩 실행하며 확인하는 데모.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #eae9e4;
+    --bg: #f1efe9;
     --surface: #ffffff;
-    --surface-2: #f4f3ee;
-    --text: #221f1a;
-    --text-muted: #6c6658;
-    --border: #d9d5c9;
-    --border-strong: #c3bda9;
+    --surface-2: #f7f5f0;
+    --text: #1c1a16;
+    --text-muted: #756e5e;
+    --border: #ddd8ca;
+    --border-strong: #c7c0ac;
     --accent: #b8481f;
     --owned: #3b6e8f;
     --ref: #a8791f;
     --mut: #c2541f;
     --moved: #a13a2e;
-    --alias: #7d7869;
+    --alias: #86806f;
 
     --term-bg: #17140f;
     --term-text: #e8e3d8;
@@ -32,20 +32,19 @@
     --term-amber: #f0b429;
     --term-blue: #7fb3d5;
 
-    --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
-    --font-body: "IBM Plex Sans", system-ui, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+    --font-sans: "IBM Plex Sans", system-ui, sans-serif;
   }
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #1c1a16;
-      --surface: #242119;
-      --surface-2: #2c2820;
-      --text: #ece7db;
-      --text-muted: #a79f8c;
-      --border: #3c3627;
-      --border-strong: #4d4630;
+      --bg: #171510;
+      --surface: #201d17;
+      --surface-2: #262219;
+      --text: #e9e4d8;
+      --text-muted: #a29a86;
+      --border: #383222;
+      --border-strong: #48412c;
       --accent: #e07a45;
       --owned: #7fb3d5;
       --ref: #dcab4c;
@@ -55,13 +54,13 @@
     }
   }
   :root[data-theme="dark"] {
-    --bg: #1c1a16;
-    --surface: #242119;
-    --surface-2: #2c2820;
-    --text: #ece7db;
-    --text-muted: #a79f8c;
-    --border: #3c3627;
-    --border-strong: #4d4630;
+    --bg: #171510;
+    --surface: #201d17;
+    --surface-2: #262219;
+    --text: #e9e4d8;
+    --text-muted: #a29a86;
+    --border: #383222;
+    --border-strong: #48412c;
     --accent: #e07a45;
     --owned: #7fb3d5;
     --ref: #dcab4c;
@@ -75,83 +74,43 @@
     margin: 0;
     background: var(--bg);
     color: var(--text);
-    font-family: var(--font-body);
-    line-height: 1.55;
-    background-image:
-      radial-gradient(ellipse 60% 40% at 85% -10%, color-mix(in srgb, var(--mut) 10%, transparent), transparent),
-      radial-gradient(ellipse 50% 30% at 5% 105%, color-mix(in srgb, var(--owned) 8%, transparent), transparent);
-    background-attachment: fixed;
+    font-family: var(--font-sans);
+    line-height: 1.5;
   }
   main {
-    max-width: 980px;
+    max-width: 900px;
     margin: 0 auto;
-    padding: 3.2rem 1.5rem 5rem;
+    padding: 2.6rem 1.5rem 4rem;
   }
 
-  /* ---------- Hero ---------- */
-  .hero { margin-bottom: 3rem; }
-  .eyebrow {
+  /* ---------- Header ---------- */
+  header { margin-bottom: 2rem; }
+  .brand {
     font-family: var(--font-mono);
-    font-size: 0.78rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin: 0 0 0.6rem;
+    font-weight: 600;
+    font-size: 1.15rem;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    margin: 0 0 0.4rem;
   }
-  .eyebrow::before {
-    content: "";
-    width: 1.6rem; height: 2px;
-    background: var(--accent);
-    display: inline-block;
-  }
-  h1 {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(2.6rem, 6vw, 4.4rem);
-    line-height: 0.92;
-    letter-spacing: 0.005em;
-    margin: 0 0 0.9rem;
-    text-wrap: balance;
-  }
-  h1 em {
-    font-style: normal;
-    color: var(--accent);
-  }
-  .hero p.lede {
-    max-width: 62ch;
-    font-size: 1.08rem;
+  .brand .name { color: var(--text); }
+  header .tagline {
+    margin: 0;
     color: var(--text-muted);
-    margin: 0 0 1.4rem;
+    font-size: 0.95rem;
   }
-  .primitives {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-  }
-  .prim {
+  header .tagline .prims {
     font-family: var(--font-mono);
     font-size: 0.86rem;
-    border: 1px solid var(--border-strong);
-    background: var(--surface);
-    border-radius: 6px;
-    padding: 0.45rem 0.7rem;
-    display: flex;
-    gap: 0.5rem;
-    align-items: baseline;
   }
-  .prim b { color: var(--mut); font-weight: 600; }
-  .prim span { color: var(--text-muted); font-family: var(--font-body); font-size: 0.82rem; }
 
   /* ---------- Playground shell ---------- */
   .playground {
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 8px;
     background: var(--surface);
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   }
   .tabs {
     display: flex;
@@ -160,26 +119,17 @@
     overflow-x: auto;
   }
   .tab {
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.92rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.88rem;
     color: var(--text-muted);
     background: transparent;
     border: none;
     border-right: 1px solid var(--border);
     border-bottom: 2px solid transparent;
-    padding: 0.9rem 1.2rem 0.8rem;
+    padding: 0.7rem 1rem;
     cursor: pointer;
-    text-align: left;
     white-space: nowrap;
-  }
-  .tab small {
-    display: block;
-    font-family: var(--font-mono);
-    font-weight: 400;
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    margin-top: 0.15rem;
   }
   .tab[aria-selected="true"] {
     color: var(--text);
@@ -191,133 +141,120 @@
   .stage {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
-    gap: 0;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 700px) {
     .stage { grid-template-columns: 1fr; }
   }
 
   /* ---------- Code panel ---------- */
-  .code-panel { padding: 1.4rem 1.4rem 0.4rem; border-right: 1px solid var(--border); }
+  .code-panel { padding: 1.1rem 1.1rem 0.3rem; border-right: 1px solid var(--border); }
   .code {
     font-family: var(--font-mono);
-    font-size: 0.94rem;
+    font-size: 0.92rem;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 6px;
     overflow: hidden;
   }
   .line {
     display: grid;
-    grid-template-columns: 1.6rem 1.4rem 1fr;
+    grid-template-columns: 1.5rem 1.2rem 1fr;
     align-items: baseline;
-    padding: 0.34rem 0.7rem;
+    padding: 0.3rem 0.6rem;
     border-left: 3px solid transparent;
-    transition: background-color 0.25s ease, border-color 0.25s ease;
   }
-  .line .num { color: var(--text-muted); opacity: 0.55; font-size: 0.82rem; text-align: right; padding-right: 0.6rem; font-variant-numeric: tabular-nums; }
-  .line .gutter { text-align: center; font-size: 0.8rem; color: var(--accent); }
+  .line .num { color: var(--text-muted); opacity: 0.55; font-size: 0.8rem; text-align: right; padding-right: 0.5rem; font-variant-numeric: tabular-nums; }
+  .line .gutter { text-align: center; font-size: 0.78rem; color: var(--accent); }
   .line .code-text { white-space: pre; overflow-x: auto; }
-  .line.is-active { background: color-mix(in srgb, var(--owned) 12%, transparent); border-left-color: var(--owned); }
-  .line.is-error { background: color-mix(in srgb, var(--moved) 16%, transparent); border-left-color: var(--moved); }
-  .line.is-related { background: color-mix(in srgb, var(--ref) 14%, transparent); border-left-color: var(--ref); }
+  .line.is-active { background: color-mix(in srgb, var(--owned) 10%, transparent); border-left-color: var(--owned); }
+  .line.is-error { background: color-mix(in srgb, var(--moved) 14%, transparent); border-left-color: var(--moved); }
+  .line.is-related { background: color-mix(in srgb, var(--ref) 12%, transparent); border-left-color: var(--ref); }
 
   .kw { color: var(--alias); }
   .str { color: var(--owned); }
   .fn-ref { color: var(--ref); font-weight: 600; }
   .fn-mut { color: var(--mut); font-weight: 600; }
   .fn-move { color: var(--moved); font-weight: 600; }
-  .fn-clone { color: var(--owned); font-weight: 600; }
 
   .is-error .tok-flag, .is-related .tok-flag {
     text-decoration-thickness: 2px;
     text-underline-offset: 3px;
-    border-radius: 2px;
   }
   .is-error .tok-flag { text-decoration: underline wavy var(--moved); }
   .is-related .tok-flag { text-decoration: underline wavy var(--ref); }
 
   .narration {
-    margin-top: 0.9rem;
-    font-size: 0.92rem;
-    color: var(--text);
-    min-height: 2.6em;
+    margin: 0.6rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    min-height: 1.4em;
   }
-  .narration strong { color: var(--accent); }
+  .narration.is-error { color: var(--moved); }
 
   /* ---------- Controls ---------- */
   .controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.9rem 0;
+    gap: 0.4rem;
+    padding: 0.8rem 0;
     flex-wrap: wrap;
   }
   .btn {
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: 0.86rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.83rem;
     border: 1px solid var(--border-strong);
     background: var(--surface);
     color: var(--text);
-    border-radius: 7px;
-    padding: 0.5rem 0.85rem;
+    border-radius: 6px;
+    padding: 0.42rem 0.7rem;
     cursor: pointer;
   }
-  .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
   .btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff8f0; }
-  .btn.primary:hover:not(:disabled) { color: #fff8f0; opacity: 0.9; }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  .dots { display: flex; gap: 0.35rem; margin-left: auto; }
+  .dots { display: flex; gap: 0.3rem; margin-left: auto; }
   .dot {
-    width: 0.55rem; height: 0.55rem; border-radius: 50%;
+    width: 0.5rem; height: 0.5rem; border-radius: 50%;
     background: var(--border-strong); border: none; cursor: pointer; padding: 0;
   }
-  .dot[aria-current="true"] { background: var(--accent); transform: scale(1.3); }
+  .dot[aria-current="true"] { background: var(--accent); }
 
   /* ---------- State panel ---------- */
-  .state-panel { padding: 1.4rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.8rem; }
+  .state-panel { padding: 1.1rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.6rem; }
   .state-panel h2 {
     font-family: var(--font-mono);
-    font-size: 0.76rem;
-    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--text-muted);
     margin: 0;
+    font-weight: 500;
   }
-  .empty-hint { color: var(--text-muted); font-size: 0.88rem; }
+  .empty-hint { color: var(--text-muted); font-size: 0.85rem; }
   .var-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 0.75rem 0.85rem;
+    border-radius: 6px;
+    padding: 0.55rem 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
-  .var-card .row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-  .var-name { font-family: var(--font-mono); font-weight: 600; font-size: 0.98rem; }
+  .var-name { font-family: var(--font-mono); font-weight: 600; font-size: 0.92rem; }
   .pill {
     font-family: var(--font-mono);
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    padding: 0.22rem 0.55rem;
-    border-radius: 100px;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
     color: #fff;
     white-space: nowrap;
-    transition: background-color 0.3s ease;
   }
-  .var-hint { color: var(--text-muted); font-size: 0.82rem; margin-top: 0.4rem; }
-
-  .chips { display: flex; flex-direction: column; gap: 0.45rem; }
-  .chip {
-    font-size: 0.84rem;
-    border-radius: 8px;
-    padding: 0.5rem 0.65rem;
-    border: 1px solid var(--border);
-    background: var(--surface);
-  }
-  .chip.warn { border-color: color-mix(in srgb, var(--moved) 50%, var(--border)); background: color-mix(in srgb, var(--moved) 8%, var(--surface)); }
-  .chip code { font-family: var(--font-mono); }
 
   /* ---------- Terminal / diagnostic ---------- */
   .terminal-wrap { grid-column: 1 / -1; border-top: 1px solid var(--border); }
@@ -325,57 +262,41 @@
     background: var(--term-bg);
     color: var(--term-text);
     font-family: var(--font-mono);
-    font-size: 0.86rem;
-    padding: 1.1rem 1.4rem 1.3rem;
-    animation: rise 0.28s ease;
+    font-size: 0.84rem;
+    padding: 1rem 1.1rem 1.1rem;
   }
-  @keyframes rise { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-  .terminal .head { display: flex; align-items: center; gap: 0.5rem; color: var(--term-red); font-weight: 600; margin-bottom: 0.7rem; }
-  .terminal .head .dot3 { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--term-red); display: inline-block; }
+  .terminal .head { display: flex; align-items: center; gap: 0.5rem; color: var(--term-red); font-weight: 600; margin-bottom: 0.6rem; }
+  .terminal .head .dot3 { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--term-red); display: inline-block; }
   .terminal pre { margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--term-dim); }
   .terminal pre .msg-line { color: var(--term-text); }
   .terminal pre .caret-line { color: var(--term-red); }
-  .terminal .note { margin-top: 0.9rem; color: var(--term-amber); }
+  .terminal .note { margin-top: 0.8rem; color: var(--term-amber); }
   .terminal .note pre { color: var(--term-dim); }
   .terminal .note pre .caret-line { color: var(--term-amber); }
-  .terminal .help { margin-top: 0.9rem; color: var(--term-blue); }
-  .terminal .help ul { margin: 0.35rem 0 0; padding-left: 1.2rem; color: var(--term-text); }
-  .terminal .help li { margin-bottom: 0.2rem; }
+  .terminal .help { margin-top: 0.8rem; color: var(--term-blue); }
+  .terminal .help ul { margin: 0.3rem 0 0; padding-left: 1.1rem; color: var(--term-text); }
+  .terminal .help li { margin-bottom: 0.15rem; }
   .terminal .runtime-note {
-    margin-top: 1rem;
-    padding-top: 0.8rem;
-    border-top: 1px dashed var(--border-strong);
+    margin-top: 0.8rem;
     color: var(--term-dim);
-    font-family: var(--font-body);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
   }
 
   /* ---------- Footer ---------- */
-  footer { margin-top: 3rem; }
-  .footer-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 2rem; }
-  @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
-  footer h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; margin: 0 0 0.6rem; }
-  .install {
+  footer {
+    margin-top: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.8rem;
     font-family: var(--font-mono);
-    font-size: 0.86rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 0.8rem 1rem;
-    color: var(--text);
+    font-size: 0.83rem;
   }
-  .install .prompt { color: var(--text-muted); }
-  .other-rules { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.6rem; }
-  .rule-chip {
-    font-family: var(--font-mono);
-    font-size: 0.76rem;
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    border-radius: 100px;
-    padding: 0.3rem 0.65rem;
-  }
-  footer a { color: var(--accent); }
-  footer p { color: var(--text-muted); font-size: 0.9rem; }
+  footer .install { color: var(--text-muted); }
+  footer .install b { color: var(--text); font-weight: 500; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
 
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
@@ -384,40 +305,28 @@
 </head>
 <body>
 <main>
-  <section class="hero">
-    <p class="eyebrow">🦀 Rusty · JS ownership checker</p>
-    <h1>JS 코드, <em>소유권</em>으로<br>읽어보세요.</h1>
-    <p class="lede">
-      Rusty는 <code>ref / mut / move / clone</code> 네 가지만 얹어서, "이 값을 지금 누가 읽고 있고
-      누가 쓰고 있고 누가 가져갔는지"를 실행 전에 정적으로 추적합니다.
-      아래에서 실제로 잡히는 버그 3가지를 한 줄씩 실행해보세요.
-    </p>
-    <div class="primitives">
-      <div class="prim"><b>ref()</b><span>읽기 전용으로 빌리기</span></div>
-      <div class="prim"><b>mut()</b><span>일시적으로 수정 권한 빌리기</span></div>
-      <div class="prim"><b>move()</b><span>소유권을 완전히 넘기기</span></div>
-      <div class="prim"><b>clone()</b><span>독립된 복사본 만들기</span></div>
-    </div>
-  </section>
+  <header>
+    <p class="brand">🦀 <span class="name">rusty</span></p>
+    <p class="tagline">JS 값의 소유권을 정적으로 추적합니다 — <span class="prims">ref · mut · move · clone</span></p>
+  </header>
 
-  <section class="playground" aria-label="Rusty 인터랙티브 데모">
+  <section class="playground" aria-label="Rusty 데모">
     <div class="tabs" role="tablist" id="tabs"></div>
     <div class="stage">
       <div class="code-panel">
         <div class="code" id="code" role="group" aria-label="예제 코드"></div>
         <p class="narration" id="narration"></p>
         <div class="controls">
-          <button class="btn" id="btn-reset" title="처음으로">↺ 처음으로</button>
-          <button class="btn" id="btn-prev">◀ 이전</button>
-          <button class="btn primary" id="btn-next">다음 ▶</button>
-          <button class="btn" id="btn-play">▶ 자동 재생</button>
+          <button class="btn" id="btn-reset" title="처음으로">↺</button>
+          <button class="btn" id="btn-prev">◀</button>
+          <button class="btn primary" id="btn-next">다음</button>
+          <button class="btn" id="btn-play">▶</button>
           <div class="dots" id="dots"></div>
         </div>
       </div>
       <div class="state-panel">
-        <h2>소유권 상태</h2>
+        <h2>상태</h2>
         <div id="vars"></div>
-        <div class="chips" id="chips"></div>
       </div>
       <div class="terminal-wrap" id="terminal-wrap" hidden>
         <div class="terminal" id="terminal"></div>
@@ -426,29 +335,11 @@
   </section>
 
   <footer>
-    <div class="footer-grid">
-      <div>
-        <h3>설치</h3>
-        <div class="install">
-          <div><span class="prompt">$</span> npm install @cheonghakim/rusty.js</div>
-          <div><span class="prompt">$</span> npx rusty check</div>
-        </div>
-        <p>CI에서든 에디터에서든, 이 정적 분석이 실행 전에 같은 진단을 냅니다.</p>
-      </div>
-      <div>
-        <h3>이 외에도 잡는 것들</h3>
-        <div class="other-rules">
-          <span class="rule-chip">rusty/maybe-use-after-move</span>
-          <span class="rule-chip">rusty/mut-while-ref</span>
-          <span class="rule-chip">rusty/ref-while-mut</span>
-          <span class="rule-chip">rusty/move-while-borrowed</span>
-        </div>
-        <p style="margin-top:0.8rem;">
-          <a href="https://www.npmjs.com/package/@cheonghakim/rusty.js" target="_blank" rel="noopener">npm에서 보기 ↗</a>
-          &nbsp;·&nbsp;
-          <a href="https://github.com/cheonghakim/rusty.js" target="_blank" rel="noopener">GitHub ↗</a>
-        </p>
-      </div>
+    <div class="install"><b>npm i</b> @cheonghakim/rusty.js</div>
+    <div>
+      <a href="https://www.npmjs.com/package/@cheonghakim/rusty.js" target="_blank" rel="noopener">npm</a>
+      &nbsp;·&nbsp;
+      <a href="https://github.com/cheonghakim/rusty.js" target="_blank" rel="noopener">github</a>
     </div>
   </footer>
 </main>
@@ -482,13 +373,10 @@
         `console.log(<span class="tok-flag">user</span>.name);`,
       ],
       steps: [
-        { active: -1, vars: [], note: "아직 실행 전입니다. <strong>다음</strong>을 눌러 한 줄씩 실행해보세요." },
-        { active: 0, vars: [{ n: "user", s: "owned" }], note: "<code>user</code>가 객체를 <strong>소유</strong>합니다." },
-        { active: 1, vars: [{ n: "user", s: "moved" }],
-          note: "<code>move(user)</code>로 소유권이 <code>send()</code> 안으로 완전히 넘어갑니다. 이 순간부터 바깥의 <code>user</code>는 더 이상 유효하지 않습니다.",
-          chips: [{ tone: "warn", html: `<code>move</code> · 소유권이 이 지점에서 다른 곳으로 이동함` }] },
-        { active: 2, vars: [{ n: "user", s: "moved" }],
-          note: "<strong>정적 분석이 여기서 멈춰 세웁니다.</strong> 이미 이동된 값을 다시 읽으려 하고 있습니다.",
+        { active: -1, vars: [], note: "실행 전" },
+        { active: 0, vars: [{ n: "user", s: "owned" }], note: "user 소유" },
+        { active: 1, vars: [{ n: "user", s: "moved" }], note: "move(user) → user 이동됨" },
+        { active: 2, vars: [{ n: "user", s: "moved" }], note: "⛔ user 재사용 — 이동된 값", isErrorNote: true,
           error: {
             code: "rusty/use-after-move",
             message: "`user` 이미 이동되어 더 이상 사용할 수 없습니다.",
@@ -519,13 +407,10 @@
         `console.log(cartRef.amount);`,
       ],
       steps: [
-        { active: -1, vars: [], note: "아직 실행 전입니다. <strong>다음</strong>을 눌러 한 줄씩 실행해보세요." },
-        { active: 0, vars: [{ n: "cart", s: "owned" }], note: "<code>cart</code>가 객체를 <strong>소유</strong>합니다." },
-        { active: 1, vars: [{ n: "cart", s: "ref" }, { n: "cartRef", s: "alias" }],
-          note: "<code>cartRef = ref(cart)</code> — <code>cart</code>에 읽기 전용 대여가 걸립니다. <code>cartRef</code>는 그 대여를 가리키는 별칭일 뿐, 별도 소유자가 아닙니다.",
-          chips: [{ tone: "info", html: `<code>ref</code> 활성 · <code>cartRef</code>가 살아있는 한 <code>cart</code>는 읽기 전용` }] },
-        { active: 2, vars: [{ n: "cart", s: "ref" }, { n: "cartRef", s: "alias" }],
-          note: "<strong>정적 분석이 여기서 멈춰 세웁니다.</strong> 읽기 전용으로 빌려준 값을 원본 바인딩으로 몰래 수정하려 하고 있습니다.",
+        { active: -1, vars: [], note: "실행 전" },
+        { active: 0, vars: [{ n: "cart", s: "owned" }], note: "cart 소유" },
+        { active: 1, vars: [{ n: "cart", s: "ref" }, { n: "cartRef", s: "alias" }], note: "ref(cart) → cart 읽기 대여" },
+        { active: 2, vars: [{ n: "cart", s: "ref" }, { n: "cartRef", s: "alias" }], note: "⛔ cart 직접 수정 — 대여 중", isErrorNote: true,
           error: {
             code: "rusty/mutation-through-ref",
             message: "`cart` 현재 읽기 전용으로 빌려진 상태라 수정할 수 없습니다.",
@@ -550,38 +435,33 @@
         `<span class="kw">const</span> b = <span class="fn-mut tok-flag">mut</span>(<span class="tok-flag">total</span>);`,
       ],
       steps: [
-        { active: -1, vars: [], note: "아직 실행 전입니다. <strong>다음</strong>을 눌러 한 줄씩 실행해보세요." },
-        { active: 0, vars: [{ n: "total", s: "owned" }], note: "<code>total</code>이 객체를 <strong>소유</strong>합니다." },
-        { active: 1, vars: [{ n: "total", s: "mut" }],
-          note: "<code>a = mut(total)</code> — <code>total</code>에 쓰기 대여가 걸립니다. 이 대여가 살아있는 동안은 <strong>단 하나의</strong> mut만 허용됩니다.",
-          chips: [{ tone: "info", html: `<code>a</code> → <code>total</code>을 mut로 대여 중` }] },
-        { active: 2, vars: [{ n: "total", s: "mut" }],
-          note: "<strong>정적 분석이 여기서 멈춰 세웁니다.</strong> <code>a</code>의 대여가 아직 끝나지 않았는데 <code>b</code>가 또 mut로 빌리려 하고 있습니다.",
+        { active: -1, vars: [], note: "실행 전" },
+        { active: 0, vars: [{ n: "total", s: "owned" }], note: "total 소유" },
+        { active: 1, vars: [{ n: "total", s: "mut" }], note: "mut(total) → total 쓰기 대여 (a)" },
+        { active: 2, vars: [{ n: "total", s: "mut" }], note: "⛔ mut(total) 재시도 (b) — 이미 대여 중", isErrorNote: true,
           error: {
             code: "rusty/double-mut-borrow",
             message: "`total` 이미 mut 상태로 빌려진 상태입니다. 동시에 두 개의 mut 빌림을 가질 수 없습니다.",
             errorLine: 3, errorToken: "mut",
             relatedLine: 2, relatedToken: "mut", relatedLabel: "기존 mut 빌림 시작 지점",
             fixes: [],
-          },
-          chips: [{ tone: "warn", html: `<code>b</code> → <code>total</code>을 mut로 대여 시도 · <strong>충돌</strong>` }] },
+          } },
       ],
     },
   ];
 
   const STATE_META = {
-    owned: { label: "소유(Owned)", color: "var(--owned)" },
-    ref: { label: "읽기 대여 중(ref)", color: "var(--ref)" },
-    mut: { label: "쓰기 대여 중(mut)", color: "var(--mut)" },
-    moved: { label: "이동됨(moved)", color: "var(--moved)" },
-    alias: { label: "별칭 · 소유자 아님", color: "var(--alias)" },
+    owned: { label: "owned", color: "var(--owned)" },
+    ref: { label: "ref", color: "var(--ref)" },
+    mut: { label: "mut", color: "var(--mut)" },
+    moved: { label: "moved", color: "var(--moved)" },
+    alias: { label: "alias", color: "var(--alias)" },
   };
 
   const tabsEl = document.getElementById("tabs");
   const codeEl = document.getElementById("code");
   const narrationEl = document.getElementById("narration");
   const varsEl = document.getElementById("vars");
-  const chipsEl = document.getElementById("chips");
   const dotsEl = document.getElementById("dots");
   const termWrap = document.getElementById("terminal-wrap");
   const termEl = document.getElementById("terminal");
@@ -595,7 +475,7 @@
   let playTimer = null;
 
   function stopPlay() {
-    if (playTimer) { clearInterval(playTimer); playTimer = null; btnPlay.textContent = "▶ 자동 재생"; }
+    if (playTimer) { clearInterval(playTimer); playTimer = null; btnPlay.textContent = "▶"; }
   }
 
   function renderTabs() {
@@ -605,7 +485,7 @@
       b.className = "tab";
       b.setAttribute("role", "tab");
       b.setAttribute("aria-selected", String(i === scenarioIdx));
-      b.innerHTML = `${esc(sc.label)}<small>${esc(sc.rule)}</small>`;
+      b.textContent = sc.label;
       b.addEventListener("click", () => { stopPlay(); scenarioIdx = i; stepIdx = 0; renderAll(); });
       tabsEl.appendChild(b);
     });
@@ -635,28 +515,23 @@
     const step = sc.steps[stepIdx];
     varsEl.innerHTML = "";
     if (!step.vars.length) {
-      varsEl.innerHTML = `<p class="empty-hint">코드를 실행하면 여기에 변수의 소유권 상태가 표시됩니다.</p>`;
-    } else {
-      step.vars.forEach((v) => {
-        const meta = STATE_META[v.s];
-        const card = document.createElement("div");
-        card.className = "var-card";
-        card.innerHTML = `<div class="row"><span class="var-name">${esc(v.n)}</span><span class="pill" style="background:${meta.color}">${esc(meta.label)}</span></div>`;
-        varsEl.appendChild(card);
-      });
+      varsEl.innerHTML = `<p class="empty-hint">다음을 눌러 실행하세요</p>`;
+      return;
     }
-    chipsEl.innerHTML = "";
-    (step.chips || []).forEach((c) => {
-      const d = document.createElement("div");
-      d.className = "chip" + (c.tone === "warn" ? " warn" : "");
-      d.innerHTML = c.html;
-      chipsEl.appendChild(d);
+    step.vars.forEach((v) => {
+      const meta = STATE_META[v.s];
+      const card = document.createElement("div");
+      card.className = "var-card";
+      card.innerHTML = `<span class="var-name">${esc(v.n)}</span><span class="pill" style="background:${meta.color}">${esc(meta.label)}</span>`;
+      varsEl.appendChild(card);
     });
   }
 
   function renderNarration() {
     const sc = SCENARIOS[scenarioIdx];
-    narrationEl.innerHTML = sc.steps[stepIdx].note;
+    const step = sc.steps[stepIdx];
+    narrationEl.textContent = step.note;
+    narrationEl.classList.toggle("is-error", !!step.isErrorNote);
   }
 
   function renderDots() {
@@ -680,13 +555,13 @@
     const errRaw = sc.raw[e.errorLine - 1];
     const relRaw = sc.raw[e.relatedLine - 1];
     let html = `<div class="head"><span class="dot3"></span> error[${esc(e.code)}]</div>`;
-    html += `<pre class="msg-line">▶ ${esc(e.message)}</pre>`;
+    html += `<pre class="msg-line">${esc(e.message)}</pre>`;
     html += `<pre>${caretBlock(e.errorLine, errRaw, e.errorToken, "")}</pre>`;
     html += `<div class="note">note: ${esc(e.relatedLabel)}<pre>${caretBlock(e.relatedLine, relRaw, e.relatedToken, "")}</pre></div>`;
     if (e.fixes && e.fixes.length) {
       html += `<div class="help">도움말<ul>${e.fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`;
     }
-    html += `<div class="runtime-note">일반 JS였다면 이 버그는 지금 조용히 넘어가고, 런타임 어딘가—운이 나쁘면 프로덕션—에서야 터졌을 겁니다. Rusty는 실행 전, 정적 분석 단계에서 잡아냅니다.</div>`;
+    html += `<div class="runtime-note">일반 JS라면 런타임까지 안 보였을 버그입니다.</div>`;
     termEl.innerHTML = html;
     termWrap.hidden = false;
   }
@@ -722,7 +597,7 @@
     if (playTimer) { stopPlay(); return; }
     const sc = SCENARIOS[scenarioIdx];
     if (stepIdx >= sc.steps.length - 1) stepIdx = 0;
-    btnPlay.textContent = "⏸ 정지";
+    btnPlay.textContent = "⏸";
     playTimer = setInterval(() => {
       const cur = SCENARIOS[scenarioIdx];
       if (stepIdx >= cur.steps.length - 1) { stopPlay(); return; }
