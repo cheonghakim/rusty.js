@@ -6,9 +6,7 @@
 
 > Write JavaScript. Think in ownership.
 
-npm에는 `@cheonghakim/rusty.js`로 올라갑니다 — scope 없는 `rusty.js`는 npm의 유사 이름 방지 정책에
-걸려서(기존의 무관한 `rustyjs` 패키지와 너무 비슷하다는 이유) 작성자의 npm 사용자명으로 scope를
-붙였습니다. `rusty` CLI 명령어 자체는 이름과 무관하게 그대로입니다.
+[인터랙티브 데모 보기](https://cheonghakim.github.io/rusty.js/)
 
 Rusty는 Rust의 ownership/borrow 검사를 JavaScript 문법이나 자료구조를 바꾸지 않고 그대로 가져옵니다.
 객체, 배열, class, Promise를 지금 쓰던 그대로 씁니다. 여기에 `ref / mut / move / clone` 네 가지

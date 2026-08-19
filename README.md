@@ -6,9 +6,7 @@
 
 > Write JavaScript. Think in ownership.
 
-Published as `@cheonghakim/rusty.js` — npm's name-similarity check blocked the unscoped `rusty.js`
-as too close to an existing unrelated package, so it's scoped under the author's npm username
-instead. The `rusty` CLI command name is unaffected either way.
+[Try the interactive demo](https://cheonghakim.github.io/rusty.js/)
 
 Rusty brings Rust's ownership/borrow checking to plain JavaScript, without replacing its syntax
 or data structures. You keep using objects, arrays, classes, and Promises as-is. Rusty adds four
