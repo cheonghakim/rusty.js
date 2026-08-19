@@ -1,6 +1,6 @@
 {
   "name": "@cheonghakim/rusty.js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Rust-style ownership/borrow checking for JavaScript. ref/mut/move/clone primitives plus a static analyzer, as one package.",
   "license": "MIT",
   "type": "module",
