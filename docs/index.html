@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rusty Playground</title>
+<meta name="description" content="Rusty가 잡아내는 소유권 버그 3가지를 한 줄씩 실행하며 눈으로 확인하는 인터랙티브 데모.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🦀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #eae9e4;
+    --surface: #ffffff;
+    --surface-2: #f4f3ee;
+    --text: #221f1a;
+    --text-muted: #6c6658;
+    --border: #d9d5c9;
+    --border-strong: #c3bda9;
+    --accent: #b8481f;
+    --owned: #3b6e8f;
+    --ref: #a8791f;
+    --mut: #c2541f;
+    --moved: #a13a2e;
+    --alias: #7d7869;
+
+    --term-bg: #17140f;
+    --term-text: #e8e3d8;
+    --term-dim: #948c78;
+    --term-red: #ff6b57;
+    --term-amber: #f0b429;
+    --term-blue: #7fb3d5;
+
+    --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1a16;
+      --surface: #242119;
+      --surface-2: #2c2820;
+      --text: #ece7db;
+      --text-muted: #a79f8c;
+      --border: #3c3627;
+      --border-strong: #4d4630;
+      --accent: #e07a45;
+      --owned: #7fb3d5;
+      --ref: #dcab4c;
+      --mut: #e2874f;
+      --moved: #e2665a;
+      --alias: #9a927d;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1a16;
+    --surface: #242119;
+    --surface-2: #2c2820;
+    --text: #ece7db;
+    --text-muted: #a79f8c;
+    --border: #3c3627;
+    --border-strong: #4d4630;
+    --accent: #e07a45;
+    --owned: #7fb3d5;
+    --ref: #dcab4c;
+    --mut: #e2874f;
+    --moved: #e2665a;
+    --alias: #9a927d;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.55;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 85% -10%, color-mix(in srgb, var(--mut) 10%, transparent), transparent),
+      radial-gradient(ellipse 50% 30% at 5% 105%, color-mix(in srgb, var(--owned) 8%, transparent), transparent);
+    background-attachment: fixed;
+  }
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 3.2rem 1.5rem 5rem;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero { margin-bottom: 3rem; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 1.6rem; height: 2px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 6vw, 4.4rem);
+    line-height: 0.92;
+    letter-spacing: 0.005em;
+    margin: 0 0 0.9rem;
+    text-wrap: balance;
+  }
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .hero p.lede {
+    max-width: 62ch;
+    font-size: 1.08rem;
+    color: var(--text-muted);
+    margin: 0 0 1.4rem;
+  }
+  .primitives {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  .prim {
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    border-radius: 6px;
+    padding: 0.45rem 0.7rem;
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+  .prim b { color: var(--mut); font-weight: 600; }
+  .prim span { color: var(--text-muted); font-family: var(--font-body); font-size: 0.82rem; }
+
+  /* ---------- Playground shell ---------- */
+  .playground {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .tabs {
+    display: flex;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tab {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border);
+    border-bottom: 2px solid transparent;
+    padding: 0.9rem 1.2rem 0.8rem;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .tab small {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+  }
+  .tab[aria-selected="true"] {
+    color: var(--text);
+    background: var(--surface);
+    border-bottom-color: var(--accent);
+  }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 720px) {
+    .stage { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Code panel ---------- */
+  .code-panel { padding: 1.4rem 1.4rem 0.4rem; border-right: 1px solid var(--border); }
+  .code {
+    font-family: var(--font-mono);
+    font-size: 0.94rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .line {
+    display: grid;
+    grid-template-columns: 1.6rem 1.4rem 1fr;
+    align-items: baseline;
+    padding: 0.34rem 0.7rem;
+    border-left: 3px solid transparent;
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+  }
+  .line .num { color: var(--text-muted); opacity: 0.55; font-size: 0.82rem; text-align: right; padding-right: 0.6rem; font-variant-numeric: tabular-nums; }
+  .line .gutter { text-align: center; font-size: 0.8rem; color: var(--accent); }
+  .line .code-text { white-space: pre; overflow-x: auto; }
+  .line.is-active { background: color-mix(in srgb, var(--owned) 12%, transparent); border-left-color: var(--owned); }
+  .line.is-error { background: color-mix(in srgb, var(--moved) 16%, transparent); border-left-color: var(--moved); }
+  .line.is-related { background: color-mix(in srgb, var(--ref) 14%, transparent); border-left-color: var(--ref); }
+
+  .kw { color: var(--alias); }
+  .str { color: var(--owned); }
+  .fn-ref { color: var(--ref); font-weight: 600; }
+  .fn-mut { color: var(--mut); font-weight: 600; }
+  .fn-move { color: var(--moved); font-weight: 600; }
+  .fn-clone { color: var(--owned); font-weight: 600; }
+
+  .is-error .tok-flag, .is-related .tok-flag {
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    border-radius: 2px;
+  }
+  .is-error .tok-flag { text-decoration: underline wavy var(--moved); }
+  .is-related .tok-flag { text-decoration: underline wavy var(--ref); }
+
+  .narration {
+    margin-top: 0.9rem;
+    font-size: 0.92rem;
+    color: var(--text);
+    min-height: 2.6em;
+  }
+  .narration strong { color: var(--accent); }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 0;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.86rem;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 0.5rem 0.85rem;
+    cursor: pointer;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff8f0; }
+  .btn.primary:hover:not(:disabled) { color: #fff8f0; opacity: 0.9; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .dots { display: flex; gap: 0.35rem; margin-left: auto; }
+  .dot {
+    width: 0.55rem; height: 0.55rem; border-radius: 50%;
+    background: var(--border-strong); border: none; cursor: pointer; padding: 0;
+  }
+  .dot[aria-current="true"] { background: var(--accent); transform: scale(1.3); }
+
+  /* ---------- State panel ---------- */
+  .state-panel { padding: 1.4rem; background: var(--surface-2); display: flex; flex-direction: column; gap: 0.8rem; }
+  .state-panel h2 {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .empty-hint { color: var(--text-muted); font-size: 0.88rem; }
+  .var-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 0.75rem 0.85rem;
+  }
+  .var-card .row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .var-name { font-family: var(--font-mono); font-weight: 600; font-size: 0.98rem; }
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    font-weight: 600;
+    padding: 0.22rem 0.55rem;
+    border-radius: 100px;
+    color: #fff;
+    white-space: nowrap;
+    transition: background-color 0.3s ease;
+  }
+  .var-hint { color: var(--text-muted); font-size: 0.82rem; margin-top: 0.4rem; }
+
+  .chips { display: flex; flex-direction: column; gap: 0.45rem; }
+  .chip {
+    font-size: 0.84rem;
+    border-radius: 8px;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .chip.warn { border-color: color-mix(in srgb, var(--moved) 50%, var(--border)); background: color-mix(in srgb, var(--moved) 8%, var(--surface)); }
+  .chip code { font-family: var(--font-mono); }
+
+  /* ---------- Terminal / diagnostic ---------- */
+  .terminal-wrap { grid-column: 1 / -1; border-top: 1px solid var(--border); }
+  .terminal {
+    background: var(--term-bg);
+    color: var(--term-text);
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    padding: 1.1rem 1.4rem 1.3rem;
+    animation: rise 0.28s ease;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .terminal .head { display: flex; align-items: center; gap: 0.5rem; color: var(--term-red); font-weight: 600; margin-bottom: 0.7rem; }
+  .terminal .head .dot3 { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--term-red); display: inline-block; }
+  .terminal pre { margin: 0; white-space: pre-wrap; word-break: break-word; color: var(--term-dim); }
+  .terminal pre .msg-line { color: var(--term-text); }
+  .terminal pre .caret-line { color: var(--term-red); }
+  .terminal .note { margin-top: 0.9rem; color: var(--term-amber); }
+  .terminal .note pre { color: var(--term-dim); }
+  .terminal .note pre .caret-line { color: var(--term-amber); }
+  .terminal .help { margin-top: 0.9rem; color: var(--term-blue); }
+  .terminal .help ul { margin: 0.35rem 0 0; padding-left: 1.2rem; color: var(--term-text); }
+  .terminal .help li { margin-bottom: 0.2rem; }
+  .terminal .runtime-note {
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px dashed var(--border-strong);
+    color: var(--term-dim);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+  }
+
+  /* ---------- Footer ---------- */
+  footer { margin-top: 3rem; }
+  .footer-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 2rem; }
+  @media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; } }
+  footer h3 { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; margin: 0 0 0.6rem; }
+  .install {
+    font-family: var(--font-mono);
+    font-size: 0.86rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 1rem;
+    color: var(--text);
+  }
+  .install .prompt { color: var(--text-muted); }
+  .other-rules { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.6rem; }
+  .rule-chip {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.3rem 0.65rem;
+  }
+  footer a { color: var(--accent); }
+  footer p { color: var(--text-muted); font-size: 0.9rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <p class="eyebrow">🦀 Rusty · JS ownership checker</p>
+    <h1>JS 코드, <em>소유권</em>으로<br>읽어보세요.</h1>
+    <p class="lede">
+      Rusty는 <code>ref / mut / move / clone</code> 네 가지만 얹어서, "이 값을 지금 누가 읽고 있고
+      누가 쓰고 있고 누가 가져갔는지"를 실행 전에 정적으로 추적합니다.
+      아래에서 실제로 잡히는 버그 3가지를 한 줄씩 실행해보세요.
+    </p>
+    <div class="primitives">
+      <div class="prim"><b>ref()</b><span>읽기 전용으로 빌리기</span></div>
+      <div class="prim"><b>mut()</b><span>일시적으로 수정 권한 빌리기</span></div>
+      <div class="prim"><b>move()</b><span>소유권을 완전히 넘기기</span></div>
+      <div class="prim"><b>clone()</b><span>독립된 복사본 만들기</span></div>
+    </div>
+  </section>
+
+  <section class="playground" aria-label="Rusty 인터랙티브 데모">
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="stage">
+      <div class="code-panel">
+        <div class="code" id="code" role="group" aria-label="예제 코드"></div>
+        <p class="narration" id="narration"></p>
+        <div class="controls">
+          <button class="btn" id="btn-reset" title="처음으로">↺ 처음으로</button>
+          <button class="btn" id="btn-prev">◀ 이전</button>
+          <button class="btn primary" id="btn-next">다음 ▶</button>
+          <button class="btn" id="btn-play">▶ 자동 재생</button>
+          <div class="dots" id="dots"></div>
+        </div>
+      </div>
+      <div class="state-panel">
+        <h2>소유권 상태</h2>
+        <div id="vars"></div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="terminal-wrap" id="terminal-wrap" hidden>
+        <div class="terminal" id="terminal"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <h3>설치</h3>
+        <div class="install">
+          <div><span class="prompt">$</span> npm install @cheonghakim/rusty.js</div>
+          <div><span class="prompt">$</span> npx rusty check</div>
+        </div>
+        <p>CI에서든 에디터에서든, 이 정적 분석이 실행 전에 같은 진단을 냅니다.</p>
+      </div>
+      <div>
+        <h3>이 외에도 잡는 것들</h3>
+        <div class="other-rules">
+          <span class="rule-chip">rusty/maybe-use-after-move</span>
+          <span class="rule-chip">rusty/mut-while-ref</span>
+          <span class="rule-chip">rusty/ref-while-mut</span>
+          <span class="rule-chip">rusty/move-while-borrowed</span>
+        </div>
+        <p style="margin-top:0.8rem;">
+          <a href="https://www.npmjs.com/package/@cheonghakim/rusty.js" target="_blank" rel="noopener">npm에서 보기 ↗</a>
+          &nbsp;·&nbsp;
+          <a href="https://github.com/cheonghakim/rusty.js" target="_blank" rel="noopener">GitHub ↗</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<script>
+(() => {
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  function caretBlock(lineNum, rawLine, token, tail) {
+    const prefix = String(lineNum).padStart(3, " ") + " | ";
+    const idx = token ? rawLine.indexOf(token) : -1;
+    const codeLine = `${prefix}${rawLine}`;
+    if (idx < 0) return `<span>${esc(codeLine)}</span>`;
+    const caretLine = " ".repeat(prefix.length + idx) + "^".repeat(token.length) + (tail ? " " + tail : "");
+    return `<span>${esc(codeLine)}</span>\n<span class="caret-line">${esc(caretLine)}</span>`;
+  }
+
+  const SCENARIOS = [
+    {
+      id: "move",
+      label: "이동 후 사용",
+      rule: "rusty/use-after-move",
+      raw: [
+        `const user = { name: "Summer", age: 30 };`,
+        `send(move(user));`,
+        `console.log(user.name);`,
+      ],
+      html: [
+        `<span class="kw">const</span> user = { name: <span class="str">"Summer"</span>, age: 30 };`,
+        `send(<span class="fn-move tok-flag">move</span>(<span class="tok-flag">user</span>));`,
+        `console.log(<span class="tok-flag">user</span>.name);`,
+      ],
+      steps: [
+        { active: -1, vars: [], note: "아직 실행 전입니다. <strong>다음</strong>을 눌러 한 줄씩 실행해보세요." },
+        { active: 0, vars: [{ n: "user", s: "owned" }], note: "<code>user</code>가 객체를 <strong>소유</strong>합니다." },
+        { active: 1, vars: [{ n: "user", s: "moved" }],
+          note: "<code>move(user)</code>로 소유권이 <code>send()</code> 안으로 완전히 넘어갑니다. 이 순간부터 바깥의 <code>user</code>는 더 이상 유효하지 않습니다.",
+          chips: [{ tone: "warn", html: `<code>move</code> · 소유권이 이 지점에서 다른 곳으로 이동함` }] },
+        { active: 2, vars: [{ n: "user", s: "moved" }],
+          note: "<strong>정적 분석이 여기서 멈춰 세웁니다.</strong> 이미 이동된 값을 다시 읽으려 하고 있습니다.",
+          error: {
+            code: "rusty/use-after-move",
+            message: "`user` 이미 이동되어 더 이상 사용할 수 없습니다.",
+            errorLine: 3, errorToken: "user",
+            relatedLine: 2, relatedToken: "move", relatedLabel: "`user` 이동된 지점",
+            fixes: [
+              "읽기만 한다면: ref(user)로 전달하세요",
+              "일시적으로 수정한다면: mut(user)로 전달하세요",
+              "소유권이 꼭 필요하다면: move(clone(user))으로 전달하세요",
+            ],
+          } },
+      ],
+    },
+    {
+      id: "ref",
+      label: "참조 중 수정",
+      rule: "rusty/mutation-through-ref",
+      raw: [
+        `const cart = { id: "C-1", amount: 200 };`,
+        `const cartRef = ref(cart);`,
+        `cart.amount = 999;`,
+        `console.log(cartRef.amount);`,
+      ],
+      html: [
+        `<span class="kw">const</span> cart = { id: <span class="str">"C-1"</span>, amount: 200 };`,
+        `<span class="kw">const</span> cartRef = <span class="fn-ref tok-flag">ref</span>(<span class="tok-flag">cart</span>);`,
+        `<span class="tok-flag">cart</span>.amount = 999;`,
+        `console.log(cartRef.amount);`,
+      ],
+      steps: [
+        { active: -1, vars: [], note: "아직 실행 전입니다. <strong>다음</strong>을 눌러 한 줄씩 실행해보세요." },
+        { active: 0, vars: [{ n: "cart", s: "owned" }], note: "<code>cart</code>가 객체를 <strong>소유</strong>합니다." },
+        { active: 1, vars: [{ n: "cart", s: "ref" }, { n: "cartRef", s: "alias" }],
+          note: "<code>cartRef = ref(cart)</code> — <code>cart</code>에 읽기 전용 대여가 걸립니다. <code>cartRef</code>는 그 대여를 가리키는 별칭일 뿐, 별도 소유자가 아닙니다.",
+          chips: [{ tone: "info", html: `<code>ref</code> 활성 · <code>cartRef</code>가 살아있는 한 <code>cart</code>는 읽기 전용` }] },
+        { active: 2, vars: [{ n: "cart", s: "ref" }, { n: "cartRef", s: "alias" }],
+          note: "<strong>정적 분석이 여기서 멈춰 세웁니다.</strong> 읽기 전용으로 빌려준 값을 원본 바인딩으로 몰래 수정하려 하고 있습니다.",
+          error: {
+            code: "rusty/mutation-through-ref",
+            message: "`cart` 현재 읽기 전용으로 빌려진 상태라 수정할 수 없습니다.",
+            errorLine: 3, errorToken: "cart",
+            relatedLine: 2, relatedToken: "ref", relatedLabel: "`cart` ref()로 빌린 지점",
+            fixes: [],
+          } },
+      ],
+    },
+    {
+      id: "double-mut",
+      label: "mut 이중 대여",
+      rule: "rusty/double-mut-borrow",
+      raw: [
+        `const total = { amount: 0, count: 0 };`,
+        `const a = mut(total);`,
+        `const b = mut(total);`,
+      ],
+      html: [
+        `<span class="kw">const</span> total = { amount: 0, count: 0 };`,
+        `<span class="kw">const</span> a = <span class="fn-mut tok-flag">mut</span>(<span class="tok-flag">total</span>);`,
+        `<span class="kw">const</span> b = <span class="fn-mut tok-flag">mut</span>(<span class="tok-flag">total</span>);`,
+      ],
+      steps: [
+        { active: -1, vars: [], note: "아직 실행 전입니다. <strong>다음</strong>을 눌러 한 줄씩 실행해보세요." },
+        { active: 0, vars: [{ n: "total", s: "owned" }], note: "<code>total</code>이 객체를 <strong>소유</strong>합니다." },
+        { active: 1, vars: [{ n: "total", s: "mut" }],
+          note: "<code>a = mut(total)</code> — <code>total</code>에 쓰기 대여가 걸립니다. 이 대여가 살아있는 동안은 <strong>단 하나의</strong> mut만 허용됩니다.",
+          chips: [{ tone: "info", html: `<code>a</code> → <code>total</code>을 mut로 대여 중` }] },
+        { active: 2, vars: [{ n: "total", s: "mut" }],
+          note: "<strong>정적 분석이 여기서 멈춰 세웁니다.</strong> <code>a</code>의 대여가 아직 끝나지 않았는데 <code>b</code>가 또 mut로 빌리려 하고 있습니다.",
+          error: {
+            code: "rusty/double-mut-borrow",
+            message: "`total` 이미 mut 상태로 빌려진 상태입니다. 동시에 두 개의 mut 빌림을 가질 수 없습니다.",
+            errorLine: 3, errorToken: "mut",
+            relatedLine: 2, relatedToken: "mut", relatedLabel: "기존 mut 빌림 시작 지점",
+            fixes: [],
+          },
+          chips: [{ tone: "warn", html: `<code>b</code> → <code>total</code>을 mut로 대여 시도 · <strong>충돌</strong>` }] },
+      ],
+    },
+  ];
+
+  const STATE_META = {
+    owned: { label: "소유(Owned)", color: "var(--owned)" },
+    ref: { label: "읽기 대여 중(ref)", color: "var(--ref)" },
+    mut: { label: "쓰기 대여 중(mut)", color: "var(--mut)" },
+    moved: { label: "이동됨(moved)", color: "var(--moved)" },
+    alias: { label: "별칭 · 소유자 아님", color: "var(--alias)" },
+  };
+
+  const tabsEl = document.getElementById("tabs");
+  const codeEl = document.getElementById("code");
+  const narrationEl = document.getElementById("narration");
+  const varsEl = document.getElementById("vars");
+  const chipsEl = document.getElementById("chips");
+  const dotsEl = document.getElementById("dots");
+  const termWrap = document.getElementById("terminal-wrap");
+  const termEl = document.getElementById("terminal");
+  const btnPrev = document.getElementById("btn-prev");
+  const btnNext = document.getElementById("btn-next");
+  const btnReset = document.getElementById("btn-reset");
+  const btnPlay = document.getElementById("btn-play");
+
+  let scenarioIdx = 0;
+  let stepIdx = 0;
+  let playTimer = null;
+
+  function stopPlay() {
+    if (playTimer) { clearInterval(playTimer); playTimer = null; btnPlay.textContent = "▶ 자동 재생"; }
+  }
+
+  function renderTabs() {
+    tabsEl.innerHTML = "";
+    SCENARIOS.forEach((sc, i) => {
+      const b = document.createElement("button");
+      b.className = "tab";
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", String(i === scenarioIdx));
+      b.innerHTML = `${esc(sc.label)}<small>${esc(sc.rule)}</small>`;
+      b.addEventListener("click", () => { stopPlay(); scenarioIdx = i; stepIdx = 0; renderAll(); });
+      tabsEl.appendChild(b);
+    });
+  }
+
+  function renderCode() {
+    const sc = SCENARIOS[scenarioIdx];
+    const step = sc.steps[stepIdx];
+    codeEl.innerHTML = "";
+    sc.html.forEach((lineHtml, i) => {
+      const row = document.createElement("div");
+      row.className = "line";
+      if (step.active === i) row.classList.add("is-active");
+      if (step.error && step.error.errorLine - 1 === i) row.classList.add("is-error");
+      if (step.error && step.error.relatedLine - 1 === i) row.classList.add("is-related");
+      let gutter = "";
+      if (step.error && step.error.errorLine - 1 === i) gutter = "⛔";
+      else if (step.error && step.error.relatedLine - 1 === i) gutter = "•";
+      else if (step.active === i) gutter = "▸";
+      row.innerHTML = `<span class="num">${i + 1}</span><span class="gutter">${gutter}</span><span class="code-text">${lineHtml}</span>`;
+      codeEl.appendChild(row);
+    });
+  }
+
+  function renderVars() {
+    const sc = SCENARIOS[scenarioIdx];
+    const step = sc.steps[stepIdx];
+    varsEl.innerHTML = "";
+    if (!step.vars.length) {
+      varsEl.innerHTML = `<p class="empty-hint">코드를 실행하면 여기에 변수의 소유권 상태가 표시됩니다.</p>`;
+    } else {
+      step.vars.forEach((v) => {
+        const meta = STATE_META[v.s];
+        const card = document.createElement("div");
+        card.className = "var-card";
+        card.innerHTML = `<div class="row"><span class="var-name">${esc(v.n)}</span><span class="pill" style="background:${meta.color}">${esc(meta.label)}</span></div>`;
+        varsEl.appendChild(card);
+      });
+    }
+    chipsEl.innerHTML = "";
+    (step.chips || []).forEach((c) => {
+      const d = document.createElement("div");
+      d.className = "chip" + (c.tone === "warn" ? " warn" : "");
+      d.innerHTML = c.html;
+      chipsEl.appendChild(d);
+    });
+  }
+
+  function renderNarration() {
+    const sc = SCENARIOS[scenarioIdx];
+    narrationEl.innerHTML = sc.steps[stepIdx].note;
+  }
+
+  function renderDots() {
+    const sc = SCENARIOS[scenarioIdx];
+    dotsEl.innerHTML = "";
+    sc.steps.forEach((_, i) => {
+      const b = document.createElement("button");
+      b.className = "dot";
+      b.setAttribute("aria-current", String(i === stepIdx));
+      b.setAttribute("aria-label", `${i + 1}단계로 이동`);
+      b.addEventListener("click", () => { stopPlay(); stepIdx = i; renderAll(); });
+      dotsEl.appendChild(b);
+    });
+  }
+
+  function renderTerminal() {
+    const sc = SCENARIOS[scenarioIdx];
+    const step = sc.steps[stepIdx];
+    if (!step.error) { termWrap.hidden = true; termEl.innerHTML = ""; return; }
+    const e = step.error;
+    const errRaw = sc.raw[e.errorLine - 1];
+    const relRaw = sc.raw[e.relatedLine - 1];
+    let html = `<div class="head"><span class="dot3"></span> error[${esc(e.code)}]</div>`;
+    html += `<pre class="msg-line">▶ ${esc(e.message)}</pre>`;
+    html += `<pre>${caretBlock(e.errorLine, errRaw, e.errorToken, "")}</pre>`;
+    html += `<div class="note">note: ${esc(e.relatedLabel)}<pre>${caretBlock(e.relatedLine, relRaw, e.relatedToken, "")}</pre></div>`;
+    if (e.fixes && e.fixes.length) {
+      html += `<div class="help">도움말<ul>${e.fixes.map((f) => `<li>${esc(f)}</li>`).join("")}</ul></div>`;
+    }
+    html += `<div class="runtime-note">일반 JS였다면 이 버그는 지금 조용히 넘어가고, 런타임 어딘가—운이 나쁘면 프로덕션—에서야 터졌을 겁니다. Rusty는 실행 전, 정적 분석 단계에서 잡아냅니다.</div>`;
+    termEl.innerHTML = html;
+    termWrap.hidden = false;
+  }
+
+  function renderButtons() {
+    const sc = SCENARIOS[scenarioIdx];
+    btnPrev.disabled = stepIdx === 0;
+    btnNext.disabled = stepIdx === sc.steps.length - 1;
+  }
+
+  function renderAll() {
+    renderTabs();
+    renderCode();
+    renderVars();
+    renderNarration();
+    renderDots();
+    renderTerminal();
+    renderButtons();
+  }
+
+  function next() {
+    const sc = SCENARIOS[scenarioIdx];
+    if (stepIdx < sc.steps.length - 1) { stepIdx++; renderAll(); }
+    else stopPlay();
+  }
+  function prev() { if (stepIdx > 0) { stepIdx--; renderAll(); } }
+  function reset() { stopPlay(); stepIdx = 0; renderAll(); }
+
+  btnNext.addEventListener("click", () => { stopPlay(); next(); });
+  btnPrev.addEventListener("click", () => { stopPlay(); prev(); });
+  btnReset.addEventListener("click", reset);
+  btnPlay.addEventListener("click", () => {
+    if (playTimer) { stopPlay(); return; }
+    const sc = SCENARIOS[scenarioIdx];
+    if (stepIdx >= sc.steps.length - 1) stepIdx = 0;
+    btnPlay.textContent = "⏸ 정지";
+    playTimer = setInterval(() => {
+      const cur = SCENARIOS[scenarioIdx];
+      if (stepIdx >= cur.steps.length - 1) { stopPlay(); return; }
+      next();
+    }, 1500);
+  });
+
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key === "ArrowRight") { stopPlay(); next(); }
+    if (ev.key === "ArrowLeft") { stopPlay(); prev(); }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
